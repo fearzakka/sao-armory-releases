@@ -1,0 +1,26 @@
+name: Refresh shared library download
+on:
+  schedule:
+    - cron: '23 5 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: armory-download-publisher
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Publish verified cumulative data and refresh download
+        run: node scripts/publish.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARMORY_PUBLISHER_TOKEN: ${{ secrets.ARMORY_PUBLISHER_TOKEN }}
+          ARMORY_REPOSITORY: ${{ github.repository }}
+          ARMORY_SERVICE: https://sao-armory-guild.hamdaouiyassin4.workers.dev
