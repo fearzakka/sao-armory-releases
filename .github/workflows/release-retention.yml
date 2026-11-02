@@ -1,0 +1,30 @@
+name: Keep latest app and two previous releases
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: armory-release-retention
+  cancel-in-progress: false
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Test retention safeguards
+        run: node --test scripts/retain-releases.test.mjs
+      - name: Verify newest download and prune obsolete app releases
+        run: node scripts/retain-releases.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARMORY_REPOSITORY: ${{ github.repository }}
+          APP_RELEASE_TAG: ${{ github.event.release.tag_name }}
