@@ -1,7 +1,7 @@
 name: Refresh shared library download
 on:
   schedule:
-    - cron: '23 5 * * *'
+    - cron: '17,47 * * * *'
   workflow_dispatch:
 permissions:
   contents: write
@@ -11,12 +11,16 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Check storage policy and bundled downloads
+        run: |
+          node --test scripts/storage-policy.test.mjs
+          python3 -m unittest discover -s scripts -p 'bundle_test.py'
       - name: Publish verified cumulative data and refresh download
         run: node scripts/publish.mjs
         env:
